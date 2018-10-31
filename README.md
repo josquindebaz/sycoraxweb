@@ -1,6 +1,7 @@
 # sycoraxweb
 PHP tool for Prospero dictionary editing 
-To share and collective works on Prospero dictionaries
+
+Share and collective works on Prospero dictionaries
 
 création
 ajouter un EF : remplir le champ avec le nom de l'EF (par exemple UNIVERSITE@) et cliquer sur +
