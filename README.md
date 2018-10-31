@@ -1,5 +1,5 @@
 # sycoraxweb
-Dictionary editing for Prospero
+PHP tool for Prospero dictionary editing 
 To share and collective works on Prospero dictionaries
 
 création
