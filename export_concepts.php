@@ -1,6 +1,5 @@
 <?php
 
-
 date_default_timezone_set('Europe/Paris');
 $date = date("Y-m-d_H-i",time());
 

@@ -1,5 +1,6 @@
 <?php
 // Josquin Debaz 14 octobre 2013 / 8 fev 2018 / 26 avril 2018//31 octobre 2018
+// 27 nov 2019
 //TODO rendre compatible  catégories P2
 
 session_start(); 
@@ -9,7 +10,6 @@ session_start();
 mb_internal_encoding("iso-8859-1");
 mb_http_output( "iso-8859-1" );
 ob_start("mb_output_handler");
-
 
 
 include "obj_concepts.php";
@@ -429,8 +429,11 @@ print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w
 
 <body>
 <div id=\"head\">
- <span class=\"headtitle\">&nbsp;SycoraxWeb</span> ".$_SESSION['email']."
-</div>
+ <span class=\"headtitle\">&nbsp;SycoraxWeb</span>";
+ 
+if (isset($_SESSION['email'])) print $_SESSION['email'];
+
+print"</div>
 
 <div id=\"subhead\">
 
@@ -442,27 +445,22 @@ if (!isset($_SESSION['sel_L_expr'])) $_SESSION['sel_L_expr'] = Null;
 if (!isset($_SESSION['sel_L_type'])) $_SESSION['sel_L_type'] = Null;
 if (!isset($_SESSION['sel_L_EF'])) $_SESSION['sel_L_EF'] = Null;
 
-if (sizeof($_SESSION['sel_L_expr']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_expr'][0]."');window.location='?modif='+mod\"";
-elseif ( ! sizeof($_SESSION['sel_L_expr']) ) {
-    if (sizeof($_SESSION['sel_L_type']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_type']."');window.location='?modif='+mod\"";
-    elseif (sizeof($_SESSION['sel_L_EF']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_EF']."');window.location='?modif='+mod\"";
-} else print " disabled"; 
+if(isset($_SESSION['sel_L_expr'])) {
+    if (sizeof($_SESSION['sel_L_expr']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_expr'][0]."');window.location='?modif='+mod\"";
+    elseif ( ! sizeof($_SESSION['sel_L_expr']) ) {
+        if (sizeof($_SESSION['sel_L_type']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_type']."');window.location='?modif='+mod\"";
+        elseif (sizeof($_SESSION['sel_L_EF']) == 1) print " onclick=\"var mod = prompt('modifier','".$_SESSION['sel_L_EF']."');window.location='?modif='+mod\"";
+    } else print " disabled"; 
+}
+
 print ">M</button>
 <button type=\"button\" onclick=\"window.location='?del=reset'\">&empty;</button> 
-<button type=\"button\" onclick=\"window.location='?fusion=left'\"";
+";
 
-if ( ! isset($local)) print " disabled";
 
-print "><-Fusion</button>
-<button type=\"button\" onclick=\"window.location='?diff=new'\"";
-if ( ! isset($local)) print " disabled";
-print " >&#177;</button> \n";
 
-print "<button type=\"button\" onclick=\"";
-if (!isset($_SESSION['server'])) print "var nmf = prompt('file name ?','');window.location='export_concepts.php?nmf='+nmf;\"";
-else print "window.location='export_concepts.php'\"";
-if (! sizeof($_SESSION['EFS']) ) print " disabled ";
-print ">export</button>
+
+print "
 <form method=\"post\">
 <select onchange=\"window.location='?server='+this.options[this.selectedIndex].value\">
 <option value=\"0\">Select dictionary</option>";
@@ -480,15 +478,19 @@ while (!(($file = readdir($dir)) === false ) ) {
 print "<option>nouveau</option></select>
 </form>
 <button type=\"button\" onclick=\"var nmf = prompt('file name ?','".$_SESSION['server']."');window.location='?save=1&amp;nmf='+nmf\" ";
-if (!$_SESSION['editeur']) print " disabled ";
-
-
+if (!isset($_SESSION['editeur'])) print " disabled ";
 
 if ( ! isset($_POST['cherche_expression'])) $_POST['cherche_expression'] = Null; 
 if ( ! isset( $_SESSION['localfilename'] )) $_SESSION['localfilename'] = Null;
 
-print ">S</button>
+print "> S </button>
 
+<button type=\"button\" onclick=\"";
+if (!isset($_SESSION['server'])) print "var nmf = prompt('file name ?','');window.location='export_concepts.php?nmf='+nmf;\"";
+else print "window.location='export_concepts.php'\"";
+
+if (! sizeof($_SESSION['EFS']) ) print " disabled ";
+print "> &#8595; </button>
 
 
 <form method=\"post\" action=\"?cherche=1\">
@@ -497,11 +499,21 @@ if ($_POST['cherche_expression']){
 	if ( ( ! $_SESSION['sel_R_EF'] ) AND (! $_SESSION['sel_L_EF']) ) print " class=\"absent\"" ; 
 }
 print "> <input type=\"submit\" value=\"find\" /></form>
+<button type=\"button\" onclick=\"window.location='?fusion=left'\"";
+
+if ( ! isset($local)) print " disabled";
+
+print ">&larr;</button>
+<button type=\"button\" onclick=\"window.location='?diff=new'\"";
+if ( ! isset($local)) print " disabled";
+print " >&notin;</button> 
+
+
 <form enctype=\"multipart/form-data\" action=\"?import=1\" method=\"post\">
 	<span class=\"cartouche\">".$_SESSION['localfilename']."</span> 
 	<input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"300000\" />
 	<input type=\"file\" name=\"localfile\">
-        <input type=\"submit\" value=\"import\" /> 
+        <input type=\"submit\" value=\"&#8593;\" /> 
 </form>
 </div>
 
@@ -599,10 +611,10 @@ print "</h3>
 if (isset($local)) {
 	$i = 0;
 	foreach (array_keys($local->EFS) as $EF) {
-		if ($_SESSION['sel_R_EF'] == $EF) {
-			print " <li id=\"selected_R_EF\" class=\"selected\">";
+		if (isset($_SESSION['sel_R_EF'])){
+                    if ($_SESSION['sel_R_EF'] == $EF) print " <li id=\"selected_R_EF\" class=\"selected\">";
 		} else {
-			if  ($i%2) print  " <li class=\"bis\">";
+			if ($i%2) print  " <li class=\"bis\">";
 			else print " <li>" ; 
 		}
 		print "<a href=\"?sel_R_EF=$EF\">";
@@ -610,19 +622,21 @@ if (isset($local)) {
 		else print "$EF";
 		print "</a></li>\n";
 		$i += 1;
-		if ($_SESSION['sel_R_EF'] == $EF) {
-			print "  <ul id=\"liste_types\">\n";
-			foreach ($local->EFS[$EF] as $type => $expressions)  {
-				print  ($_SESSION['sel_R_type'] == $type) ?  "   <li  id=\"selected_R_type\" class=\"selected\">": "   <li>";
-				print "<a href=\"?sel_R_type=$type\">";
-				if (isset($_SESSION['EFS'][$_SESSION['sel_R_EF']])) {
-					if (! in_array($type,array_keys($_SESSION['EFS'][$_SESSION['sel_R_EF']]))) print "<span class=\"green\">$type</span>";
-					else print "$type";
-				} else print "<span class=\"green\">$type</span>";
-				print " (".sizeof($expressions).")</a></li>\n";
-			}
-			print "  </ul>\n"; 
-		} 
+		if (isset($_SESSION['sel_R_EF'])){
+                    if ($_SESSION['sel_R_EF'] == $EF) {
+                            print "  <ul id=\"liste_types\">\n";
+                            foreach ($local->EFS[$EF] as $type => $expressions)  {
+                                    print  ($_SESSION['sel_R_type'] == $type) ?  "   <li  id=\"selected_R_type\" class=\"selected\">": "   <li>";
+                                    print "<a href=\"?sel_R_type=$type\">";
+                                    if (isset($_SESSION['EFS'][$_SESSION['sel_R_EF']])) {
+                                            if (! in_array($type,array_keys($_SESSION['EFS'][$_SESSION['sel_R_EF']]))) print "<span class=\"green\">$type</span>";
+                                            else print "$type";
+                                    } else print "<span class=\"green\">$type</span>";
+                                    print " (".sizeof($expressions).")</a></li>\n";
+                            }
+                            print "  </ul>\n"; 
+                    } 
+                }
 	}
 }
 print "
