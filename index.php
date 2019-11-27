@@ -1,24 +1,22 @@
 <?php
 // Josquin Debaz 14 octobre 2013 / 8 fev 2018 / 26 avril 2018//31 octobre 2018
 // 27 nov 2019
-//TODO rendre compatible  catégories P2
+//TODO rendre compatible catégories P2
+//TODO dico lexicofonctionnels
 
 session_start(); 
-
 
 //forcer l'iso
 mb_internal_encoding("iso-8859-1");
 mb_http_output( "iso-8859-1" );
 ob_start("mb_output_handler");
 
-
 include "obj_concepts.php";
-
 
 $_POST = array_map('stripslashes',$_POST);
 $_GET = array_map('stripslashes',$_GET);
 
-if (isset($_GET['save'])  AND ($_GET['nmf'])) {
+if (isset($_GET['save']) AND ($_GET['nmf'])) {
 	if (!preg_match("/fic$/",$_GET['nmf'])) $_GET['nmf'] .= ".fic"; 
 	$content =  "fic0001\n";
 	foreach ($_SESSION['EFS'] as $k1 => $v1) 
@@ -49,10 +47,23 @@ if ( isset($_GET['import']) AND ($_FILES['localfile']['tmp_name']) ) {
 
 if (isset($_SESSION['local'])) $local = unserialize($_SESSION['local']);
 
-
 if (isset($_GET['server'])) {
-	if ($_GET['server'] == 'nouveau') unset($_SESSION['EFS'],$_SESSION['server']);
-	else {
+	if (in_array($_GET['server'], array('new.fic', 'new.col', 'new.cat')))  {
+            unset($_SESSION['EFS'],$_SESSION['server']);
+            if ($_GET['server'] == 'new.fic') {
+                $_SESSION['Lficcatcol'] = "Fictions";
+                $_SESSION['EFS']['MY-FICTION@']["..."] = array("expression");
+            } elseif ($_GET['server'] == 'new.col') {
+                $_SESSION['Lficcatcol'] = "Collections";
+                $_SESSION['EFS']['MY-COLLECTION*']["..."] = array("expression");
+            } elseif ($_GET['server'] == 'new.cat') {
+                $_SESSION['Lficcatcol'] = "Cat&eacute;gories";
+                $_SESSION['EFS']["*ENTITE*"] = array();
+                $_SESSION['EFS']["*QUALITE*"] = array();
+                $_SESSION['EFS']["*MARQUEUR*"] = array();
+                $_SESSION['EFS']["*EPREUVE*"] = array();
+            }
+	 } else {
 		$_SESSION['server'] =  $_GET['server'];
 		$server = new parse_concept("concepts/".$_GET['server']);
 		$_SESSION['EFS'] = $server->EFS;
@@ -458,6 +469,15 @@ print ">M</button>
 ";
 
 
+print "
+<form method=\"post\">
+<select onchange=\"window.location='?server='+this.options[this.selectedIndex].value\">
+<option value=\"\">New dictionary</option>
+<option>new.fic</option>
+<option>new.col</option>
+<option>new.cat</option>
+</select>
+</form>";
 
 
 print "
@@ -475,7 +495,8 @@ while (!(($file = readdir($dir)) === false ) ) {
 	}
 }
 
-print "<option>nouveau</option></select>
+print "
+</select>
 </form>
 <button type=\"button\" onclick=\"var nmf = prompt('file name ?','".$_SESSION['server']."');window.location='?save=1&amp;nmf='+nmf\" ";
 if (!isset($_SESSION['editeur'])) print " disabled ";
@@ -486,8 +507,14 @@ if ( ! isset( $_SESSION['localfilename'] )) $_SESSION['localfilename'] = Null;
 print "> S </button>
 
 <button type=\"button\" onclick=\"";
-if (!isset($_SESSION['server'])) print "var nmf = prompt('file name ?','');window.location='export_concepts.php?nmf='+nmf;\"";
-else print "window.location='export_concepts.php'\"";
+if (!isset($_SESSION['server'])) {
+    if (isset($_SESSION['Lficcatcol'])) { 
+        if ($_SESSION['Lficcatcol'] == "Fictions") $extension = ".fic";
+        elseif ($_SESSION['Lficcatcol'] == "Collections") $extension = ".col";
+        elseif ($_SESSION['Lficcatcol'] == "Cat&eacute;gories") $extension = ".cat";
+    } else $extension = "";
+    print "var nmf = prompt('file name ?','".$extension."');window.location='export_concepts.php?nmf='+nmf;\"";
+} else print "window.location='export_concepts.php'\"";
 
 if (! sizeof($_SESSION['EFS']) ) print " disabled ";
 print "> &#8595; </button>
@@ -517,17 +544,13 @@ print " >&notin;</button>
 </form>
 </div>
 
-
-
 <div id=\"farleft\">
-<h3>
-";
+<h3>";
 
 if (isset($_SESSION['Lficcatcol'])) print $_SESSION['Lficcatcol'];
 else print "Server";
 
-print "
- (".sizeof($_SESSION['EFS']).")</h3>
+print " (".sizeof($_SESSION['EFS']).")</h3>
 <ul id=\"liste_EF\">
 ";
 
@@ -611,9 +634,8 @@ print "</h3>
 if (isset($local)) {
 	$i = 0;
 	foreach (array_keys($local->EFS) as $EF) {
-		if (isset($_SESSION['sel_R_EF'])){
-                    if ($_SESSION['sel_R_EF'] == $EF) print " <li id=\"selected_R_EF\" class=\"selected\">";
-		} else {
+                if ($_SESSION['sel_R_EF'] == $EF) print " <li id=\"selected_R_EF\" class=\"selected\">";
+		else {
 			if ($i%2) print  " <li class=\"bis\">";
 			else print " <li>" ; 
 		}
@@ -651,7 +673,7 @@ print "
 ";
 print (isset($local)) ? "<h3>Expressions</h3>\n" : "<h3>&nbsp;</h3>\n";
 
-if (isset($_SESSION['sel_R_type'])) {
+if ($_SESSION['sel_R_type']) {
 	print "<ul id=\"liste_EF\">\n";
 	$i = 0;
 	foreach ($local->repr_type($_SESSION['sel_R_EF'],$_SESSION['sel_R_type']) as $expr){

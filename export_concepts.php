@@ -3,13 +3,10 @@
 date_default_timezone_set('Europe/Paris');
 $date = date("Y-m-d_H-i",time());
 
-
 session_start(); 
 
 if ($_SESSION['server']) $nmf = $_SESSION['server'];
 else $nmf = $_GET['nmf'];
-//if (!preg_match("/fic$/",$nmf)) $nmf .= ".fic";
-//TODO add extension according to concept type
 
 header("Content-Type: application/force-download"); 
 header("Content-type: text/plain; charset=ISO-8859-1");
